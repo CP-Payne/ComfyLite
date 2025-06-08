@@ -1,0 +1,12 @@
+@hostname=127.0.0.1
+@port=8081
+
+POST {{hostname}}:{{port}}/gen
+Content-Type: application/json
+
+{
+    "prompt":"red car on a cloud",
+    "batch_size":1,
+    "width":450,
+    "height":450
+}
