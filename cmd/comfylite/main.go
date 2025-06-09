@@ -39,7 +39,8 @@ func main() {
 		return
 	}
 
-	httpClient := httpclient.New(fmt.Sprintf("http://%s:%s", comfyHost, comfyPort), "https://webhook.site/1ec37b84-9907-408c-9cec-efca90682383")
+	// httpClient := httpclient.New(fmt.Sprintf("http://%s:%s", comfyHost, comfyPort), "https://webhook.site/1ec37b84-9907-408c-9cec-efca90682383")
+	httpClient := httpclient.New(fmt.Sprintf("http://%s:%s", comfyHost, comfyPort), "http://localhost:3000/gen/update")
 
 	wsHandler := wsclient.HandleIncomingMessage(httpClient)
 

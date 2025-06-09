@@ -88,14 +88,22 @@ func (h *ImageGenHandler) GenerateImage(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	_, err = h.httpClient.GenerateImage(models.GenerateRequest{
+	resp, err := h.httpClient.GenerateImage(models.GenerateRequest{
 		ClientID: h.clientID,
 		Prompt:   wf,
 	})
-
 	if err != nil {
 		log.Printf("failed to generate image: %v", err)
 		return
 	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		log.Printf("failed to marshal response body: %v", err)
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(respBytes)
 
 }

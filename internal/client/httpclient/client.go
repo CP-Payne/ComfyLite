@@ -58,9 +58,17 @@ func (c *Client) GenerateImage(reqData models.GenerateRequest) (*models.Generate
 		return nil, err
 	}
 
-	log.Printf("Response body: %s\n", string(respBody))
+	response := &models.GenerateResponse{}
 
-	return nil, nil
+	err = json.Unmarshal(respBody, response)
+	if err != nil {
+		log.Printf("Error unmarshalling response body into struct: %v\n", err)
+		return nil, err
+	}
+
+	log.Printf("GenerateResponse: %+v\n", response)
+
+	return response, nil
 }
 
 func (c *Client) NotifyWebhook(reqData models.WebhookRequestData) error {

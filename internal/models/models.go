@@ -11,7 +11,7 @@ type GenerateRequest struct {
 }
 
 type GenerateResponse struct {
-	PromptID string
+	PromptID string `json:"prompt_id"`
 }
 
 type WebhookRequestData struct {
