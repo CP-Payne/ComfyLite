@@ -149,8 +149,8 @@ func (c *client) Submit(workflow []byte) (string, error) {
 		return "", fmt.Errorf("failed to decode prompt response: %w", err)
 	}
 
-	if promptResp.NodeErrors != nil {
-		fmt.Println("WARN: node errors in not nil")
+	if len(promptResp.NodeErrors) != 0 {
+		fmt.Printf("WARN: node errors is not nil: %v\n", promptResp.NodeErrors)
 	}
 
 	return promptResp.PromptID, nil
