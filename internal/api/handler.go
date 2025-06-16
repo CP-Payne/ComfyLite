@@ -10,7 +10,7 @@ import (
 	"github.com/CP-Payne/comfylite/internal/service"
 )
 
-const workflowName = "starter"
+const workflowName = "flux"
 
 type Handler struct {
 	service service.Service

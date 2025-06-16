@@ -1,0 +1,17 @@
+# This file maps generic parameter names to specific node IDs and properties in the JSON
+node_mappings:
+  prompt:
+    node_id: "6" 
+    property: "text"
+  seed:
+    node_id: "31"
+    property: "seed"
+  width:
+    node_id: "27"
+    property: "width"
+  height:
+    node_id: "27"
+    property: "height"
+  imageCount:
+    node_id: "27"
+    property: "batch_size"
