@@ -15,7 +15,7 @@ type GenerationResult struct {
 }
 
 type Service interface {
-	GenerateImage(ctx context.Context, workflowName string, params map[string]any) (*GenerationResult, error)
+	GenerateImage(ctx context.Context, workflowName string, params map[string]any, webhookURL string) (*GenerationResult, error)
 }
 
 type service struct {
@@ -32,7 +32,7 @@ func NewService(wm workflow.Manager, cc comfy.Client, tracker tracker.Tracker) S
 	}
 }
 
-func (s *service) GenerateImage(ctx context.Context, workflowName string, params map[string]any) (*GenerationResult, error) {
+func (s *service) GenerateImage(ctx context.Context, workflowName string, params map[string]any, webhookURL string) (*GenerationResult, error) {
 	finalWorkflow, err := s.workflowMgr.Build(workflowName, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build workflow: %w", err)
@@ -49,27 +49,32 @@ func (s *service) GenerateImage(ctx context.Context, workflowName string, params
 		imageCount = 1
 	}
 
-	resultChan, err := s.tracker.Subscribe(promptID, imageCount)
+	// No need to wait for results on the channel, tracker will respond to wehooks on success
+	_, err = s.tracker.Subscribe(promptID, imageCount, webhookURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to subscribe to tracker using promptID: %s: %w", promptID, err)
 	}
 
-	select {
-	case result, ok := <-resultChan:
-		if !ok {
-			return nil, fmt.Errorf("tracker channel closed unexpectedly for promptID: %s", promptID)
-		}
-		if result.Success {
-			return &GenerationResult{
-				PromptID: promptID,
-				Images:   result.Images,
-			}, nil
-		}
-		return nil, fmt.Errorf("prompt failed: %w", result.Error)
+	// select {
+	// case result, ok := <-resultChan:
+	// 	if !ok {
+	// 		return nil, fmt.Errorf("tracker channel closed unexpectedly for promptID: %s", promptID)
+	// 	}
+	// 	if result.Success {
+	// 		return &GenerationResult{
+	// 			PromptID: promptID,
+	// 			Images:   result.Images,
+	// 		}, nil
+	// 	}
+	// 	return nil, fmt.Errorf("prompt failed: %w", result.Error)
 
-	case <-ctx.Done():
-		return nil, fmt.Errorf("context cancelled while waiting for promptID %s: %w", promptID, ctx.Err())
+	// case <-ctx.Done():
+	// 	return nil, fmt.Errorf("context cancelled while waiting for promptID %s: %w", promptID, ctx.Err())
 
-	}
+	// }
+
+	return &GenerationResult{
+		PromptID: promptID,
+	}, nil
 
 }
