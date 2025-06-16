@@ -19,6 +19,12 @@ type tracker struct {
 	promptsMux    sync.RWMutex
 }
 
+func New() Tracker {
+	return &tracker{
+		allPrompts: make(map[string]*PromptState),
+	}
+}
+
 func (t *tracker) Start(ctx context.Context, eventChan <-chan Event) {
 	log.Println("Tracker service started.")
 
