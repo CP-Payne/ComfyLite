@@ -7,6 +7,8 @@ const (
 	EventExecutionFinished EventType = "EXECUTION_FINISHED"
 	EventImageReceived     EventType = "IMAGE_RECEIVED"
 	EventJobFailed         EventType = "JOB_FAILED"
+	EventProgress          EventType = "PROGRESS"
+	EventExecuting         EventType = "EXECUTING"
 )
 
 type Event struct {

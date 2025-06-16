@@ -105,6 +105,10 @@ func (c *client) dispatcher(_ context.Context, eventChan chan<- tracker.Event) {
 				internalEvent = tracker.Event{Type: tracker.EventExecutionStart, PromptID: promptID}
 			case "execution_success":
 				internalEvent = tracker.Event{Type: tracker.EventExecutionFinished, PromptID: promptID}
+			case "executing":
+				internalEvent = tracker.Event{Type: tracker.EventExecuting, PromptID: promptID}
+			case "progress":
+				internalEvent = tracker.Event{Type: tracker.EventProgress, PromptID: promptID}
 
 				// TODO: Add event types for "execution_interupted" and determin if there is a type for errors
 			}

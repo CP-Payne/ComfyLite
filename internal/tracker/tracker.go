@@ -44,11 +44,13 @@ func (t *tracker) Start(ctx context.Context, eventChan <-chan Event) {
 		case event, ok := <-eventChan:
 			if !ok {
 				log.Println("Tracker event channel closed.")
-				t.validateAndFinalizeCurrentPrompt(true)
+				t.finalizePrompt(t.currentPrompt, "channel closed")
 				return
 			}
 
 			// Drain the remaining timeout if it has not stopped successfully
+			// Note: any event received by this eventChan is a sign of life (heartbeat) (such as the progress and executing event)
+			// and should reset the timer
 			if !timeout.Stop() {
 				select {
 				case <-timeout.C:
@@ -62,7 +64,7 @@ func (t *tracker) Start(ctx context.Context, eventChan <-chan Event) {
 
 		case <-timeout.C:
 			log.Println("Tracker timed out waiting for new events. Finalizing last known prompt.")
-			t.validateAndFinalizeCurrentPrompt(true)
+			t.finalizePrompt(t.currentPrompt, "tracker timed out")
 		}
 	}
 }
@@ -73,7 +75,10 @@ func (t *tracker) processEvent(event Event) {
 
 	switch event.Type {
 	case EventExecutionStart:
-		t.validateAndFinalizeCurrentPrompt(false)
+
+		if t.currentPrompt != nil {
+			t.finalizePrompt(t.currentPrompt, "new prompt started")
+		}
 
 		prompt, ok := t.allPrompts[event.PromptID]
 		if !ok {
@@ -92,78 +97,77 @@ func (t *tracker) processEvent(event Event) {
 		if binaryData, ok := event.Data.([]byte); ok {
 			t.currentPrompt.ImagesReceived = append(t.currentPrompt.ImagesReceived, binaryData)
 		}
+		t.tryFinalizeOnSuccess(t.currentPrompt)
 	case EventExecutionFinished:
 		if t.currentPrompt == nil {
 			log.Println("Warning: Received finished event with no active prompt.")
 			return
 		}
 		t.currentPrompt.ExecutionFinished = true
+		t.tryFinalizeOnSuccess(t.currentPrompt)
 
 	}
 }
 
-func (t *tracker) validateAndFinalizeCurrentPrompt(isShutdownOrTimeout bool) {
-	if t.currentPrompt == nil {
+func (t *tracker) tryFinalizeOnSuccess(prompt *PromptState) {
+	if prompt == nil {
 		return
 	}
 
-	promptToValidate := t.currentPrompt
-
-	isSuccess := true
-	var validationError error
-
-	if !promptToValidate.ExecutionFinished {
-		isSuccess = false
-		validationError = fmt.Errorf("prompt finished without receiving an 'executed' event")
+	if prompt.ExecutionFinished && len(prompt.ImagesReceived) == prompt.ImagesExpected {
+		t.finalizePrompt(prompt, "all images and finished signal received")
 	}
-	if len(promptToValidate.ImagesReceived) != promptToValidate.ImagesExpected {
-		isSuccess = false
-		validationError = fmt.Errorf("exected %d image but received %d", promptToValidate.ImagesExpected, len(promptToValidate.ImagesReceived))
+}
+
+func (t *tracker) finalizePrompt(prompt *PromptState, reason string) {
+	if _, exist := t.allPrompts[prompt.ID]; !exist {
+		return
 	}
+
+	log.Printf("Finalizing prompt. Reason: %s\n", reason)
 
 	var payload notifier.WebhookPayload
-	if isSuccess {
-		// TODO: store images to S3 bucket and return image URLs
-		log.Printf("Prompt %s finished successfully.", promptToValidate.ID)
+
+	if prompt.ExecutionFinished && len(prompt.ImagesReceived) == prompt.ImagesExpected {
+		log.Printf("Prompt %s finished successfully.", prompt.ID)
 
 		// Encode binary images before sending
-
 		var encodedImages []string
-		for _, image := range promptToValidate.ImagesReceived {
+		for _, image := range prompt.ImagesReceived {
 			encodedImages = append(encodedImages, base64.StdEncoding.EncodeToString(image))
 		}
 
 		payload = notifier.WebhookPayload{
 			Status:   "success",
-			PromptID: promptToValidate.ID,
+			PromptID: prompt.ID,
 			Images:   encodedImages,
 		}
 
 		// Still send the result to the channel for incase any consumers wants to wait for the success result
-		promptToValidate.ResultChan <- &Result{Success: true, Images: promptToValidate.ImagesReceived}
+		prompt.ResultChan <- &Result{Success: true, Images: prompt.ImagesReceived}
 	} else {
-
-		log.Printf("Prompt %s failed: %v", promptToValidate.ID, validationError)
+		err := fmt.Errorf("prompt failed validation: expected %d images, got %d. finish_signal: %t", prompt.ImagesExpected, len(prompt.ImagesReceived), prompt.ExecutionFinished)
+		log.Printf("Prompt %s failed: %v", prompt.ID, err)
 
 		payload = notifier.WebhookPayload{
 			Status:   "failure",
-			PromptID: promptToValidate.ID,
-			Error:    validationError.Error(),
+			PromptID: prompt.ID,
+			Error:    err.Error(),
 		}
 
-		promptToValidate.ResultChan <- &Result{Success: false, Error: validationError}
+		prompt.ResultChan <- &Result{Success: false, Error: err}
 	}
 
-	if promptToValidate.WebhookURL != "" {
-		if err := t.notifier.Notify(promptToValidate.WebhookURL, payload); err != nil {
-			fmt.Printf("Error queueing webhook notification for prompt %s: %v\n", promptToValidate.ID, err)
+	if prompt.WebhookURL != "" {
+		if err := t.notifier.Notify(prompt.WebhookURL, payload); err != nil {
+			fmt.Printf("Error queueing webhook notification for prompt %s: %v\n", prompt.ID, err)
 		}
 	}
 
-	close(promptToValidate.ResultChan)
-	delete(t.allPrompts, promptToValidate.ID)
+	close(prompt.ResultChan)
+	delete(t.allPrompts, prompt.ID)
 
-	if !isShutdownOrTimeout {
+	if t.currentPrompt != nil && t.currentPrompt.ID == prompt.ID {
 		t.currentPrompt = nil
 	}
 }
