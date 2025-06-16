@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/CP-Payne/comfylite/pkg/tracker"
+	"github.com/CP-Payne/comfylite/internal/tracker"
 	"github.com/gorilla/websocket"
 )
 

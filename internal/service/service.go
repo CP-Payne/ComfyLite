@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CP-Payne/comfylite/pkg/comfy"
-	"github.com/CP-Payne/comfylite/pkg/tracker"
-	"github.com/CP-Payne/comfylite/pkg/workflow"
+	"github.com/CP-Payne/comfylite/internal/comfy"
+	"github.com/CP-Payne/comfylite/internal/tracker"
+	"github.com/CP-Payne/comfylite/internal/workflow"
 )
 
 type GenerationResult struct {
