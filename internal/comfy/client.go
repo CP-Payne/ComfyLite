@@ -112,7 +112,7 @@ func (c *client) dispatcher(_ context.Context, eventChan chan<- tracker.Event) {
 			eventChan <- internalEvent
 
 		case websocket.BinaryMessage:
-			eventChan <- tracker.Event{Type: tracker.EventImageReceived, Data: rawMsg}
+			eventChan <- tracker.Event{Type: tracker.EventImageReceived, Data: rawMsg[:8]}
 		default:
 			log.Println("Unknown message type: ", msgType)
 
