@@ -48,7 +48,13 @@ func (t *tracker) Start(ctx context.Context, eventChan <-chan Event) {
 				return
 			}
 
-			timeout.Stop()
+			// Drain the remaining timeout if it has not stopped successfully
+			if !timeout.Stop() {
+				select {
+				case <-timeout.C:
+				default:
+				}
+			}
 			t.processEvent(event)
 			if t.currentPrompt != nil {
 				timeout.Reset(30 * time.Second)
