@@ -21,6 +21,7 @@ type PromptState struct {
 	ImagesReceived    [][]byte
 	ExecutionFinished bool
 	ResultChan        chan *Result
+	WebhookURL        string
 }
 
 type Result struct {
