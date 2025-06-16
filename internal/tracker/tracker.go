@@ -171,6 +171,7 @@ func (t *tracker) Subscribe(promptID string, imagesExpected int, webhookURL stri
 	}
 
 	newState := &PromptState{
+		ID:             promptID,
 		ImagesExpected: imagesExpected,
 		ImagesReceived: make([][]byte, 0, imagesExpected),
 		ResultChan:     make(chan *Result, 1),
