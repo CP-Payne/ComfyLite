@@ -93,8 +93,8 @@ func (c *client) dispatcher(_ context.Context, eventChan chan<- tracker.Event) {
 
 			promptID, ok := dataMap["prompt_id"].(string)
 			if !ok {
-
-				log.Printf("Warn: prompt_id field missing or not a string")
+				// Not all events contain prompt_id, ignore those for now
+				// log.Printf("Warn: prompt_id field missing or not a string")
 				continue
 			}
 
