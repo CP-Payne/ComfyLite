@@ -2,7 +2,6 @@
 
 This guide will show you how to add your own workflows to ComfyLite using ComfyUI exports, and how to wire them up with configuration files.
 
----
 
 ## 1. Exporting Your Workflow from ComfyUI
 
@@ -11,7 +10,6 @@ This guide will show you how to add your own workflows to ComfyLite using ComfyU
 3. Click **"Export (API)"** in ComfyUI.
 4. Save the file with a descriptive name (e.g., `my_custom_workflow.json`).
 
----
 
 ## 2. Adding the Workflow to ComfyLite
 

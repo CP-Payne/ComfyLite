@@ -11,13 +11,13 @@ Its core purpose is to abstract the complexity of ComfyUI workflows and provide 
 
 Key capabilities include:
 
-**Seamless workflow switching**: Quickly switch between ComfyUI workflows or AI models by simply adding a new template JSON and config file.
+* **Seamless workflow switching**: Quickly switch between ComfyUI workflows or AI models by simply adding a new template JSON and config file.
 
-**Minimal setup for new workflows**: Define your workflow in ComfyUI, export the JSON, create a simple config mapping in ComfyLite, and optionally update the handler to support additional parameters.
+* **Minimal setup for new workflows**: Define your workflow in ComfyUI, export the JSON, create a simple config mapping in ComfyLite, and optionally update the handler to support additional parameters.
 
-**Webhook-based result delivery**: Receive image generation results (success or failure) directly to your application via webhook, supporting asynchronous system integration.
+* **Webhook-based result delivery**: Receive image generation results (success or failure) directly to your application via webhook, supporting asynchronous system integration.
 
-**Synchronous prompt queueing**: ComfyLite processes image generation statuses in a sequential order as updates are received via a websocket from ComfyUI. Once ComfyLite detects that an image generation prompt has succeeded or failed, it immediately notifies the consumer via a webhook and then proceeds to track or await the next prompt from ComfyUI.
+* **Synchronous prompt queueing**: ComfyLite processes image generation statuses in a sequential order as updates are received via a websocket from ComfyUI. Once ComfyLite detects that an image generation prompt has succeeded or failed, it immediately notifies the consumer via a webhook and then proceeds to track or await the next prompt from ComfyUI.
 
 Designed for simplicity and efficiency, ComfyLite makes it easier to integrate dynamic generative AI capabilities into your applications.
 
